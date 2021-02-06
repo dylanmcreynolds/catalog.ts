@@ -1,0 +1,29 @@
+{
+  "name": "catalog.ts",
+  "version": "0.0.1",
+  "description": "A typescript proxy for a remote Catalog project",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dylanmcreynolds/catalog.ts.git"
+  },
+  "keywords": [
+    "catalog"
+  ],
+  "author": "Dylan McReynolds",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/dylanmcreynolds/catalog.ts/issues"
+  },
+  "homepage": "https://github.com/dylanmcreynolds/catalog.ts#readme",
+  "devDependencies": {
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
