@@ -7,35 +7,33 @@ export class Base {
     meta: any;
 }
 
-export interface Catalog {
-    getCatalogs(): Promise<Array<Catalog>>; 
-    getDescription(): Base; 
-    getKeys(): Base;
-    getEntries(): Base;
-}
-
 export interface Datasource{
     getDescription(): {}; 
     getBlob(): {};
 }
  
 export interface RemoteClient{
-    fetch(path: string): Promise<any> ;
+    fetchIt(path: string): Promise<any> ;
 }
 
-export class AxiosClient implements RemoteClient{
+export class AxiosClient implements RemoteClient {
 
     private client: any;
      
     constructor(rootUrl: string){
         this.client = axios.create({
-            baseURL: 'rootUrl'
+            baseURL: rootUrl
         });
-    }
+        
+    }   
 
-    aysnc fetch(path: string): Promise<any> {
+    async fetchIt(path: string): Promise<Array<Catalog>>  {
         return await this.client.get(path);
     }
+}
+
+export interface Catalog {
+    readonly description: any;
 }
 
 export class RemoteCatalog implements Catalog {
@@ -46,18 +44,20 @@ export class RemoteCatalog implements Catalog {
     }
 
     async getCatalogs(): Promise<Array<Catalog>> {
-        const returnVal = await this.remoteClient.fetch("/catalogs/description");
+        try{
+            const returnVal = await this.remoteClient.fetchIt("/catalogs/entries/description");
+            console.log(JSON.stringify(returnVal.data, null, 2 ))
+        }
+        catch(e){
+            console.log(e);
+        }
+        
         const returnBase = Array<Catalog>();
         return returnBase;
 
     }
-    getDescription(): Base {
-        throw new Error("Method not implemented.");
-    }
-    getKeys(): Base {
-        throw new Error("Method not implemented.");
-    }
-    getEntries(): Base {
+    
+    get description(): Base {
         throw new Error("Method not implemented.");
     }
 

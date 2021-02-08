@@ -5,6 +5,8 @@
 Tools
 
 
+(good link)[https://basarat.gitbook.io/typescript/nodejs]
+
 tsc - transpiles typescript to javascript
 
 
