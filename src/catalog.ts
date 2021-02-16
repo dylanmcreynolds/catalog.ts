@@ -1,64 +1,66 @@
-import axios from "axios";
+import axios, {AxiosInstance} from "axios";
+import {Map} from "immutable"
 
-export class Base {
-    // TODO: be more specific than any
-    data: any;
-    links: any;
-    meta: any;
-}
 
-export interface Datasource{
-    getDescription(): {}; 
-    getBlob(): {};
-}
- 
 export interface RemoteClient{
-    fetchIt(path: string): Promise<any> ;
+    fetchIt(path: string, query_params?: any): Promise<any> ;
 }
 
 export class AxiosClient implements RemoteClient {
 
-    private client: any;
+    private client: AxiosInstance;
      
     constructor(rootUrl: string){
         this.client = axios.create({
-            baseURL: rootUrl
+            baseURL: rootUrl,
+            validateStatus: function(status){
+                return status < 400;
+            }
         });
         
     }   
 
-    async fetchIt(path: string): Promise<Array<Catalog>>  {
-        return await this.client.get(path);
+    async fetchIt(path: string, query_params?: any): Promise<Array<object>>  {
+        return await this.client.get(path, {params: query_params});
     }
 }
 
-export interface Catalog {
-    readonly description: any;
+
+export interface Query{
+   // not sure how to represent this yet
+
 }
 
-export class RemoteCatalog implements Catalog {
-    protected remoteClient: RemoteClient;
+export class ClientCatalog{
+    _client: RemoteClient;
+    _metadata: Map<string, string>;
+    _path: string;
+    _queries: Array<Query> = [];
 
-    constructor(remoteClient: RemoteClient){
-        this.remoteClient = remoteClient;
+    constructor(client: RemoteClient, path: string, metadata: Map<string, string>, queries?: Array<Query>){
+        this._client = client;
+        this._metadata = metadata;
+        this._path = path;
+        if (queries !== undefined) this._queries = queries;
     }
 
-    async getCatalogs(): Promise<Array<Catalog>> {
-        try{
-            const returnVal = await this.remoteClient.fetchIt("/catalogs/entries/description");
-            console.log(JSON.stringify(returnVal.data, null, 2 ))
-        }
-        catch(e){
-            console.log(e);
-        }
+    static async fromUri(client: RemoteClient, path: string): Promise<ClientCatalog> {
+        const response = await client.fetchIt(`/metadata/${path}`);
+        const metadata = Map<string, string>(Object.entries(response.data.data.attributes.metadata));
+        return new ClientCatalog(client, path, metadata);
+    }  
+
+    get metadata(): Map<string, string>{
+        return this._metadata;
+    }
+
+    get length(): Promise<number> {
+        return (async () => {
+            const response = 
+            await this._client.fetchIt(`/search/${this._path}`, {fields: "count"});
+            return response.data.data.attributes.count;
+        })();
         
-        const returnBase = Array<Catalog>();
-        return returnBase;
-
-    }
-    
-    get description(): Base {
-        throw new Error("Method not implemented.");
     }
 
 
