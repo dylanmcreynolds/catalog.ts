@@ -1,14 +1,12 @@
-import {ClientCatalog, AxiosClient} from "./catalog";
+import {Catalog} from "./catalog";
 
 
 async function collectData(){
 
-    const client = new AxiosClient("http://localhost:8000");
-    let rootCatalog = await ClientCatalog.fromUri(client, "");
-    
+   let rootCatalog = await Catalog.fromUri("http://localhost:8000");    
 
-    console.log(rootCatalog.metadata);
-    console.log(await rootCatalog.length);
+    console.log(rootCatalog);
+    // console.log(await rootCatalog.length);
     // const rootCatlogs: any = aCatalog.getChildren();
     // console.log(rootCatlogs.entries);
 }

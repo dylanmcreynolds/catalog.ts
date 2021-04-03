@@ -1,28 +1,9 @@
-import axios, {AxiosInstance} from "axios";
-import {Map} from "immutable"
-
-
+import {Map} from "immutable";
+import {RestClient, IRestResponse} from 'typed-rest-client';
+import {IRequestOptions} from 'typed-rest-client/Interfaces';
+import {JSONAPIObj} from './jsonapi';
 export interface RemoteClient{
     fetchIt(path: string, query_params?: any): Promise<any> ;
-}
-
-export class AxiosClient implements RemoteClient {
-
-    private client: AxiosInstance;
-     
-    constructor(rootUrl: string){
-        this.client = axios.create({
-            baseURL: rootUrl,
-            validateStatus: function(status){
-                return status < 400;
-            }
-        });
-        
-    }   
-
-    async fetchIt(path: string, query_params?: any): Promise<Array<object>>  {
-        return await this.client.get(path, {params: query_params});
-    }
 }
 
 
@@ -31,37 +12,50 @@ export interface Query{
 
 }
 
-export class ClientCatalog{
-    _client: RemoteClient;
-    _metadata: Map<string, string>;
-    _path: string;
+export class Catalog{
+    _client: RestClient;
+    _path:  Array<string>;
+    _metadata: any;
+    _params: Array<string> = [];
     _queries: Array<Query> = [];
 
-    constructor(client: RemoteClient, path: string, metadata: Map<string, string>, queries?: Array<Query>){
+    private constructor(
+        client: RestClient,
+        path: Array<string>,
+        metadata?: Map<string, string>, 
+        queries?: Array<Query>,
+        params?: Array<string>) {
         this._client = client;
-        this._metadata = metadata;
         this._path = path;
+        if (metadata !== undefined) this._metadata = metadata;
+        if (params !== undefined) this._params = params;
         if (queries !== undefined) this._queries = queries;
     }
 
-    static async fromUri(client: RemoteClient, path: string): Promise<ClientCatalog> {
-        const response = await client.fetchIt(`/metadata/${path}`);
-        const metadata = Map<string, string>(Object.entries(response.data.data.attributes.metadata));
-        return new ClientCatalog(client, path, metadata);
+    static async fromUri(
+        uri: string,
+        token?: string){
+        const headers = {};
+        let options: IRequestOptions = {};
+        if (token !== undefined){
+            options = <IRequestOptions>{additionalHeaders: {'X-Access-Token"' : token }};
+        }
+        const client: RestClient = new RestClient('tiled agent', uri, undefined, options);
+        const result = await Catalog.getContent(client, "/metadata/");
+        let metadata;
+        console.log(result);
+        if (!!result && !!result.data){
+            metadata = result.data.attributes['metadata'];
+            console.log(metadata);
+        }
+       
+        return new Catalog(client, new Array<string>(), metadata);
+        
     }  
 
-    get metadata(): Map<string, string>{
-        return this._metadata;
+    private static async getContent(client: RestClient, path: string): Promise<JSONAPIObj | null>{
+        const response: IRestResponse<JSONAPIObj> =  await client.get<JSONAPIObj>(path);
+        return response.result;
     }
-
-    get length(): Promise<number> {
-        return (async () => {
-            const response = 
-            await this._client.fetchIt(`/search/${this._path}`, {fields: "count"});
-            return response.data.data.attributes.count;
-        })();
-        
-    }
-
 
 }
